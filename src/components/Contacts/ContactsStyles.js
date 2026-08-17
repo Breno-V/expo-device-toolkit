@@ -1,0 +1,75 @@
+import { StyleSheet } from "react-native";
+
+const styles = StyleSheet.create({
+    container:{
+        flex:1,
+        padding:20,
+        backgroundColor:'#fff',
+    },
+    reloadButton:{
+        flexDirection:'row',
+        alignItems:'center',
+        justifyContent:'center',
+        backgroundColor:'#007AFF',
+        paddingVertical:12,
+        paddingHorizontal:20,
+        borderRadius:8,
+    },
+    reloadButtonContainer:{
+        alignItems:'center',
+        marginBottom:20,
+    },
+    buttonPressed:{
+        opacity:0.7,
+    },
+    reloadButtonText:{
+        color:'#fff',
+        fontSize:16,
+        fontWeight:'600',
+        marginLeft:8,
+    },
+    list:{
+        marginTop:20,
+    },
+    listContainer:{
+        flex:1,
+        marginTop:12,
+    },
+    loadingContainer:{
+        flex:1,
+        justifyContent:'center',
+        alignItems:'center',
+    },
+    sectionHeader:{
+        fontSize:15,
+        fontWeight:'bold',
+        color:'#007AFF',
+        backgroundColor:'#f0f0f0',
+        paddingVertical:6,
+        paddingHorizontal:15,
+    },
+    contactItem:{
+        padding:15,
+        borderBottomWidth:1,
+        borderColor:'#eee',
+    },
+    contactName:{
+        fontSize:18,
+        fontWeight:'bold',
+    },
+    contactDetail:{
+        fontSize:14,
+        color:'#555',
+        marginTop:5,
+    },
+    contactDetailContainer:{
+        flexDirection: 'row',
+        alignItems:'center',
+        marginTop:5,
+    },
+    icon:{
+        marginRight:10,
+    }
+});
+
+export default styles;
