@@ -8,6 +8,10 @@ const styles = StyleSheet.create({
         paddingBottom:30,
         backgroundColor:'#fff'
     },
+    buttonRow:{
+        flexDirection:'row',
+        gap:12,
+    },
     button:{
         flexDirection:'row',
         alignItems:'center',

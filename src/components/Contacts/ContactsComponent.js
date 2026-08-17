@@ -1,73 +1,84 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, SectionList, Alert, Pressable, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, FlatList, Alert, Pressable, ActivityIndicator, TextInput } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Contacts from 'expo-contacts';
 import styles from './ContactsStyles';
 import { usePermission } from '../../hooks/usePermission';
 import PermissionGate from '../PermissionGate/PermissionGate';
-import ImagePickerComponent from '../ImagePicker/ImagePickerComponent';
 
-const getInitialLetter = (contact) => {
-    const name = (contact.firstName || contact.lastName || '').trim();
-    const letter = name.charAt(0).toUpperCase();
-    return letter >= 'A' && letter <= 'Z' ? letter : '#';
-};
-
-const buildSections = (contacts) => {
-    const groups = {};
-
-    contacts.forEach((contact) => {
-        const letter = getInitialLetter(contact);
-        if (!groups[letter]) {
-            groups[letter] = [];
-        }
-        groups[letter].push(contact);
-    });
-
-    return Object.keys(groups)
-        .sort((a, b) => (a === '#' ? 1 : b === '#' ? -1 : a.localeCompare(b)))
-        .map((letter) => ({
-            title: letter,
-            data: groups[letter],
-        }));
-};
+const PAGE_SIZE = 20;
 
 const ContactsComponent = () => {
     const [contacts, setContacts] = useState([]);
     const [loading, setLoading] = useState(false);
-    const { status, isLoading, requestPermission } = usePermission({
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [searchText, setSearchText] = useState('');
+    const [pageOffset, setPageOffset] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const { status, canAskAgain, isLoading, requestPermission } = usePermission({
         getPermission: Contacts.getPermissionsAsync,
         requestPermission: Contacts.requestPermissionsAsync,
     });
 
-    const sections = buildSections(contacts);
+    const loadContacts = async (reset = false) => {
+        if (loading || loadingMore) return;
 
-    const loadContacts = async () => {
-        setLoading(true);
+        const offset = reset ? 0 : pageOffset;
+        reset ? setLoading(true) : setLoadingMore(true);
+
         try {
-            const { data } = await Contacts.getContactsAsync({
+            const query = searchText.trim();
+            const options = {
                 fields: [Contacts.Fields.Emails, Contacts.Fields.PhoneNumbers],
                 sort: Contacts.SortTypes.FirstName,
-            });
+                pageSize: PAGE_SIZE,
+                pageOffset: offset,
+            };
 
-            if (data.length > 0) {
-                setContacts(data);
-            } else {
-                Alert.alert('Sem contatos', 'Nenhum contato encontrado!');
+            if (query.length > 0) {
+                options.name = query;
             }
+
+            const { data } = await Contacts.getContactsAsync(options);
+
+            if (reset) {
+                setContacts(data);
+                setPageOffset(PAGE_SIZE);
+            } else {
+                setContacts((prev) => [...prev, ...data]);
+                setPageOffset((prev) => prev + PAGE_SIZE);
+            }
+
+            setHasMore(data.length >= PAGE_SIZE);
         } catch (error) {
             Alert.alert('Erro', 'Ocorreu um erro ao carregar os contatos!');
             console.error(error);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
-    }
+    };
 
     useEffect(() => {
-        if (status === 'granted' && contacts.length === 0) {
-            loadContacts();
+        if (status === 'granted') {
+            loadContacts(true);
         }
-    }, [status, contacts.length]);
+    }, [status]);
+
+    useEffect(() => {
+        if (status === 'granted') {
+            const timeout = setTimeout(() => {
+                loadContacts(true);
+            }, 400);
+            return () => clearTimeout(timeout);
+        }
+    }, [searchText]);
+
+    const handleEndReached = useCallback(() => {
+        if (hasMore && !loading && !loadingMore) {
+            loadContacts(false);
+        }
+    }, [hasMore, loading, loadingMore, pageOffset]);
 
     const renderItem = ({ item }) => (
         <View style={styles.contactItem}>
@@ -93,9 +104,14 @@ const ContactsComponent = () => {
         </View>
     );
 
-    const renderSectionHeader = ({ section }) => (
-        <Text style={styles.sectionHeader}>{section.title}</Text>
-    )
+    const renderFooter = () => {
+        if (!loadingMore) return null;
+        return (
+            <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color="#007AFF" />
+            </View>
+        );
+    };
 
     return (
         <PermissionGate
@@ -103,21 +119,26 @@ const ContactsComponent = () => {
             title="Acessar seus contatos"
             description="Para exibir e ligar para seus contatos, precisamos da sua permissão para acessar a lista de contatos."
             status={status}
+            canAskAgain={canAskAgain}
             loading={isLoading}
             onRequest={requestPermission}
         >
             <View style={styles.container}>
-                <ImagePickerComponent />
-
-                <View style={styles.reloadButtonContainer}>
-
-                    <Pressable
-                        style={({ pressed }) => [styles.reloadButton, pressed && styles.buttonPressed]}
-                        onPress={loadContacts}
-                        >
-                        <Feather name="refresh-cw" size={20} color="#fff" />
-                        <Text style={styles.reloadButtonText}>Recarregar Contatos</Text>
-                    </Pressable>
+                <View style={styles.searchContainer}>
+                    <Feather name="search" size={18} color="#999" style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Buscar contato..."
+                        placeholderTextColor="#999"
+                        value={searchText}
+                        onChangeText={setSearchText}
+                        autoCorrect={false}
+                    />
+                    {searchText.length > 0 && (
+                        <Pressable onPress={() => setSearchText('')}>
+                            <Feather name="x" size={18} color="#999" />
+                        </Pressable>
+                    )}
                 </View>
 
                 <View style={styles.listContainer}>
@@ -126,14 +147,22 @@ const ContactsComponent = () => {
                             <ActivityIndicator size="large" color="#007AFF" />
                         </View>
                     ) : (
-                        <SectionList
-                            sections={sections}
+                        <FlatList
+                            data={contacts}
                             keyExtractor={(item) => item.id}
                             renderItem={renderItem}
-                            renderSectionHeader={renderSectionHeader}
-                            stickySectionHeadersEnabled
                             contentContainerStyle={styles.list}
                             showsVerticalScrollIndicator={false}
+                            onEndReached={handleEndReached}
+                            onEndReachedThreshold={0.5}
+                            ListFooterComponent={renderFooter}
+                            ListEmptyComponent={
+                                !loading ? (
+                                    <View style={styles.loadingContainer}>
+                                        <Text style={styles.emptyText}>Nenhum contato encontrado</Text>
+                                    </View>
+                                ) : null
+                            }
                         />
                     )}
                 </View>

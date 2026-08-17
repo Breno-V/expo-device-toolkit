@@ -6,47 +6,39 @@ const styles = StyleSheet.create({
         padding:20,
         backgroundColor:'#fff',
     },
-    reloadButton:{
+    searchContainer:{
         flexDirection:'row',
         alignItems:'center',
-        justifyContent:'center',
-        backgroundColor:'#007AFF',
-        paddingVertical:12,
-        paddingHorizontal:20,
+        backgroundColor:'#f0f0f0',
         borderRadius:8,
+        paddingHorizontal:12,
+        marginBottom:16,
     },
-    reloadButtonContainer:{
-        alignItems:'center',
-        marginBottom:20,
+    searchIcon:{
+        marginRight:8,
     },
-    buttonPressed:{
-        opacity:0.7,
-    },
-    reloadButtonText:{
-        color:'#fff',
+    searchInput:{
+        flex:1,
+        paddingVertical:10,
         fontSize:16,
-        fontWeight:'600',
-        marginLeft:8,
-    },
-    list:{
-        marginTop:20,
+        color:'#333',
     },
     listContainer:{
         flex:1,
-        marginTop:12,
+    },
+    list:{
+        paddingBottom:20,
     },
     loadingContainer:{
         flex:1,
         justifyContent:'center',
         alignItems:'center',
+        paddingTop:40,
     },
-    sectionHeader:{
-        fontSize:15,
-        fontWeight:'bold',
-        color:'#007AFF',
-        backgroundColor:'#f0f0f0',
-        paddingVertical:6,
-        paddingHorizontal:15,
+    emptyText:{
+        fontSize:16,
+        color:'#999',
+        textAlign:'center',
     },
     contactItem:{
         padding:15,
@@ -69,7 +61,11 @@ const styles = StyleSheet.create({
     },
     icon:{
         marginRight:10,
-    }
+    },
+    footerLoader:{
+        paddingVertical:20,
+        alignItems:'center',
+    },
 });
 
 export default styles;
