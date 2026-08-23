@@ -20,7 +20,7 @@ const PermissionGate = ({
     if (status === null) {
         return (
             <View style={styles.container}>
-                <ActivityIndicator size="large" color="#007AFF" />
+                <ActivityIndicator size="large" color="#16A34A" />
             </View>
         );
     }
@@ -51,7 +51,7 @@ const PermissionGate = ({
     return (
         <View style={styles.container}>
             <View style={styles.iconContainer}>
-                <Feather name={icon} size={40} color="#007AFF" />
+                <Feather name={icon} size={40} color="#16A34A" />
             </View>
 
             <Text style={styles.title}>{title}</Text>
