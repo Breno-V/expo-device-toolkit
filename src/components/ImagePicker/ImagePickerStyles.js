@@ -10,16 +10,19 @@ const styles = StyleSheet.create({
     },
     buttonRow:{
         flexDirection:'row',
+        flexWrap:'wrap',
         gap:12,
     },
     button:{
         flexDirection:'row',
         alignItems:'center',
         justifyContent:'center',
-        backgroundColor:'#007AFF',
+        backgroundColor:'#16A34A',
         paddingVertical:12,
         paddingHorizontal:20,
         borderRadius:8,
+        minWidth:140,
+        flexGrow:1,
     },
     buttonPressed:{
         opacity:0.7,
@@ -32,17 +35,16 @@ const styles = StyleSheet.create({
     },
     previewArea:{
         width:'100%',
-        height:160,
         marginTop:16,
         justifyContent:'center',
         alignItems:'center',
         borderRadius:10,
-        backgroundColor:'#f0f0f0',
+        backgroundColor:'#F0FDF4',
+        padding: 8,
     },
     image:{
         width:'100%',
-        height:'100%',
-        borderRadius:10,
+        borderRadius:8,
     }
 })
 

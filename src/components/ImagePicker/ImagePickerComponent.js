@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Image, Alert, Pressable, Text, Linking } from 'react-native';
+import { View, Image, Alert, Pressable, Text, Linking, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import styles from './ImagePickerStyles';
 import * as ImagePicker from 'expo-image-picker';
@@ -13,6 +13,8 @@ const ImagePickerComponent = () => {
         requestPermission: ImagePicker.requestMediaLibraryPermissionsAsync,
     });
 
+    const [imageDimensions, setImageDimensions] = useState({ width: 300, height: 200 });
+
     const selectImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -22,7 +24,11 @@ const ImagePickerComponent = () => {
 
         if (result.canceled) return;
 
-        setImageUri(result.assets[0].uri);
+        const asset = result.assets[0];
+        setImageUri(asset.uri);
+        if (asset.width && asset.height) {
+            setImageDimensions({ width: asset.width, height: asset.height });
+        }
     };
 
     const captureImage = async () => {
@@ -57,7 +63,11 @@ const ImagePickerComponent = () => {
 
         if (result.canceled) return;
 
-        setImageUri(result.assets[0].uri);
+        const asset = result.assets[0];
+        setImageUri(asset.uri);
+        if (asset.width && asset.height) {
+            setImageDimensions({ width: asset.width, height: asset.height });
+        }
     };
 
     return (
@@ -70,7 +80,7 @@ const ImagePickerComponent = () => {
             loading={isLoading}
             onRequest={requestPermission}
         >
-            <View style={styles.container}>
+            <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
                 <View style={styles.buttonRow}>
                     <Pressable
                         style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
@@ -93,12 +103,18 @@ const ImagePickerComponent = () => {
                     {imageUri && (
                         <Image
                             source={{ uri: imageUri }}
-                            style={styles.image}
-                            resizeMode="cover"
+                            style={[
+                                styles.image,
+                                {
+                                    aspectRatio: imageDimensions.width / imageDimensions.height,
+                                    maxHeight: 350,
+                                }
+                            ]}
+                            resizeMode="contain"
                         />
                     )}
                 </View>
-            </View>
+            </ScrollView>
         </PermissionGate>
     );
 };
