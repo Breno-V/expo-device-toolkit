@@ -8,17 +8,17 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Para que você possa escolher e enviar fotos da sua galeria.",
         "NSCameraUsageDescription": "Para que você possa tirar fotos como evidência.",
-        "NSContactUsageDescription": "Para que você possa visualizar e ligar para seus contatos."
+        "NSContactUsageDescription": "Para que você possa visualizar e ligar para seus contatos.",
+        "NSLocationWhenInUseUsageDescription": "Para que o aplicativo possa acessar sua localização."
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#DCFCE7",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
@@ -27,8 +27,11 @@
         "WRITE_CONTACTS",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
-        "CAMERA"
-      ]
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "package": "com.brenovalentim.expodevicetoolkit"
     },
     "web": {
       "favicon": "./assets/favicon.png"
