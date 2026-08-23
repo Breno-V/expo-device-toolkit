@@ -9,7 +9,7 @@ const styles = StyleSheet.create({
     searchContainer:{
         flexDirection:'row',
         alignItems:'center',
-        backgroundColor:'#f0f0f0',
+        backgroundColor:'#F0FDF4',
         borderRadius:8,
         paddingHorizontal:12,
         marginBottom:16,

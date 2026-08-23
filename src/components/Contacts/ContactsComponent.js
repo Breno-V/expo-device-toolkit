@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, FlatList, Alert, Pressable, ActivityIndicator, TextInput } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import * as Contacts from 'expo-contacts';
+import * as Contacts from 'expo-contacts/legacy';
 import styles from './ContactsStyles';
 import { usePermission } from '../../hooks/usePermission';
 import PermissionGate from '../PermissionGate/PermissionGate';
@@ -15,13 +15,16 @@ const ContactsComponent = () => {
     const [searchText, setSearchText] = useState('');
     const [pageOffset, setPageOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
+    // Guard síncrono: state de loading não impede double-fire do onEndReached
+    const carregandoRef = useRef(false);
     const { status, canAskAgain, isLoading, requestPermission } = usePermission({
         getPermission: Contacts.getPermissionsAsync,
         requestPermission: Contacts.requestPermissionsAsync,
     });
 
     const loadContacts = async (reset = false) => {
-        if (loading || loadingMore) return;
+        if (carregandoRef.current) return;
+        carregandoRef.current = true;
 
         const offset = reset ? 0 : pageOffset;
         reset ? setLoading(true) : setLoadingMore(true);
@@ -40,39 +43,44 @@ const ContactsComponent = () => {
             }
 
             const { data } = await Contacts.getContactsAsync(options);
+            const safeData = data ?? [];
 
             if (reset) {
-                setContacts(data);
+                // dedupe por id para evitar duplicate keys (ex: 5732)
+                const deduped = Array.from(new Map(safeData.map((c) => [c.id, c])).values());
+                setContacts(deduped);
                 setPageOffset(PAGE_SIZE);
             } else {
-                setContacts((prev) => [...prev, ...data]);
+                setContacts((prev) => {
+                    const map = new Map(prev.map((c) => [c.id, c]));
+                    safeData.forEach((c) => {
+                        if (!map.has(c.id)) map.set(c.id, c);
+                    });
+                    return Array.from(map.values());
+                });
                 setPageOffset((prev) => prev + PAGE_SIZE);
             }
 
-            setHasMore(data.length >= PAGE_SIZE);
+            setHasMore(safeData.length >= PAGE_SIZE);
         } catch (error) {
             Alert.alert('Erro', 'Ocorreu um erro ao carregar os contatos!');
             console.error(error);
         } finally {
+            carregandoRef.current = false;
             setLoading(false);
             setLoadingMore(false);
         }
     };
 
+    // Efeito único: carrega ao obter permissão e a cada busca (debounce 300ms).
+    // Substitui os dois effects anteriores que causavam carga dupla no mount.
     useEffect(() => {
-        if (status === 'granted') {
+        if (status !== 'granted') return;
+        const timeout = setTimeout(() => {
             loadContacts(true);
-        }
-    }, [status]);
-
-    useEffect(() => {
-        if (status === 'granted') {
-            const timeout = setTimeout(() => {
-                loadContacts(true);
-            }, 400);
-            return () => clearTimeout(timeout);
-        }
-    }, [searchText]);
+        }, 300);
+        return () => clearTimeout(timeout);
+    }, [status, searchText]);
 
     const handleEndReached = useCallback(() => {
         if (hasMore && !loading && !loadingMore) {
@@ -80,35 +88,44 @@ const ContactsComponent = () => {
         }
     }, [hasMore, loading, loadingMore, pageOffset]);
 
-    const renderItem = ({ item }) => (
-        <View style={styles.contactItem}>
-            <Text style={styles.contactName}>
-                {item.firstName} {item.lastName}
-            </Text>
-            {item.phoneNumbers?.map((phone, index) => (
-                <View key={index} style={styles.contactDetailContainer}>
-                    <Feather name="phone" size={16} color="#555" style={styles.icon} />
-                    <Text style={styles.contactDetail}>
-                        {phone.number}
-                    </Text>
-                </View>
-            ))}
-            {item.emails?.map((email, index) => (
-                <View key={index} style={styles.contactDetailContainer}>
-                    <Feather name="mail" size={16} color="#555" style={styles.icon} />
-                    <Text style={styles.contactDetail}>
-                        {email.email}
-                    </Text>
-                </View>
-            ))}
-        </View>
-    );
+    const renderItem = ({ item }) => {
+        // Contatos não salvos vêm sem firstName/lastName — exibe o número no lugar
+        const nome = [item.firstName, item.lastName]
+            .filter((parte) => parte && parte.trim())
+            .join(' ')
+            .trim();
+        const primeiroTelefone = item.phoneNumbers?.[0]?.number;
+
+        return (
+            <View style={styles.contactItem}>
+                <Text style={styles.contactName} numberOfLines={1}>
+                    {nome || primeiroTelefone || 'Contato sem nome'}
+                </Text>
+                {item.phoneNumbers?.map((phone, index) => (
+                    <View key={index} style={styles.contactDetailContainer}>
+                        <Feather name="phone" size={16} color="#555" style={styles.icon} />
+                        <Text style={styles.contactDetail}>
+                            {phone.number}
+                        </Text>
+                    </View>
+                ))}
+                {item.emails?.map((email, index) => (
+                    <View key={index} style={styles.contactDetailContainer}>
+                        <Feather name="mail" size={16} color="#555" style={styles.icon} />
+                        <Text style={styles.contactDetail}>
+                            {email.email}
+                        </Text>
+                    </View>
+                ))}
+            </View>
+        );
+    };
 
     const renderFooter = () => {
         if (!loadingMore) return null;
         return (
             <View style={styles.footerLoader}>
-                <ActivityIndicator size="small" color="#007AFF" />
+                <ActivityIndicator size="small" color="#16A34A" />
             </View>
         );
     };
@@ -144,13 +161,16 @@ const ContactsComponent = () => {
                 <View style={styles.listContainer}>
                     {loading && contacts.length === 0 ? (
                         <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color="#007AFF" />
+                            <ActivityIndicator size="large" color="#16A34A" />
                         </View>
                     ) : (
                         <FlatList
                             data={contacts}
-                            keyExtractor={(item) => item.id}
+                            keyExtractor={(item, index) => `${item.id ?? 'no-id'}_${index}`}
                             renderItem={renderItem}
+                            initialNumToRender={12}
+                            maxToRenderPerBatch={12}
+                            windowSize={7}
                             contentContainerStyle={styles.list}
                             showsVerticalScrollIndicator={false}
                             onEndReached={handleEndReached}
