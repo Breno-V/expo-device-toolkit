@@ -70,10 +70,13 @@ Usei `AsyncStorage` com `expo-file-system`, de maneira que a função principal 
 
 **6. Integração no Registro de Visita Técnica.**
 É onde tudo se junta, pois o produtor preenche os dados, depois captura o GPS já com selo de cor, em seguida tira a foto com prova de local e hora, enquanto acompanha a telemetria ao vivo, de forma que só finaliza com foto e aparelho estável, além de não quebrar sem GPS ou câmera (degradação graciosa RNF01) e se adaptar a qualquer tela em pé ou deitado com `ScrollView`, `flex` e `flexWrap` (RNF02).
-
 ## Vídeo demonstrativo
 
-<video src="./assets/apresentacao-pam-05-09-26.mp4" width="360" controls playsinline preload="metadata"></video>
+https://github.com/Breno-V/expo-device-toolkit/raw/main/assets/apresentacao-pam-05-09-26.mp4
+
+<video src="https://github.com/Breno-V/expo-device-toolkit/raw/main/assets/apresentacao-pam-05-09-26.mp4" width="360" controls playsinline preload="metadata"></video>
+
+> Se o player não carregar, [clique aqui para assistir ao vídeo](./assets/apresentacao-pam-05-09-26.mp4).
 
 ## Como executar o projeto
 
