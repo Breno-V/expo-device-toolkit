@@ -4,6 +4,7 @@ import * as Location from 'expo-location';
 import { LocationStyles } from './LocationStyles';
 import { usePermission } from '../../hooks/usePermission';
 import PermissionGate from '../PermissionGate/PermissionGate';
+import { gpsQuality } from '../../utils/gpsQuality';
 
 const LocationComponent = () => {
     const [location, setLocation] = useState(null);
@@ -64,6 +65,28 @@ const LocationComponent = () => {
                                 <Text style={LocationStyles.infoLabel}>
                                     Precisão: ±{location.accuracy?.toFixed(2) ?? '—'} m
                                 </Text>
+                                {/* RF02 — indicador visual de precisão do sinal GPS */}
+                                {(() => {
+                                    const qualidade = gpsQuality(location.accuracy);
+                                    return (
+                                        <View style={LocationStyles.gpsMetaLinha}>
+                                            <View
+                                                style={[
+                                                    LocationStyles.gpsPonto,
+                                                    { backgroundColor: qualidade.color },
+                                                ]}
+                                            />
+                                            <Text
+                                                style={[
+                                                    LocationStyles.gpsMetaTexto,
+                                                    { color: qualidade.color },
+                                                ]}
+                                            >
+                                                ±{location.accuracy?.toFixed(1) ?? '—'}m · {qualidade.label}
+                                            </Text>
+                                        </View>
+                                    );
+                                })()}
                             </View>
                         ) : (
                             <Text style={LocationStyles.errorText}>Pressione para obter a localização.</Text>

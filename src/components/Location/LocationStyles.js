@@ -41,4 +41,19 @@ export const LocationStyles = StyleSheet.create({
         marginTop: 8,
         textAlign: 'center',
     },
+    gpsMetaLinha: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 6,
+    },
+    gpsPonto: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        marginRight: 8,
+    },
+    gpsMetaTexto: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
 });
